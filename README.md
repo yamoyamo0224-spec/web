@@ -20,7 +20,7 @@ body{
  padding-top:260px;
 }
 
-/* Discordスタッツ（画像なし） */
+/* webname（画像なし） */
 #discord {
  position:fixed;
  top:0;
