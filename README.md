@@ -34,6 +34,15 @@ body{
  z-index:9999;
 }
 
+#discord img{
+    width:200px;              /* 横長っぽくする */
+    height:auto;
+    border:3px solid white;  /* 枠 */
+    border-radius:10px;      /* 角丸 */
+    background:rgba(0,0,0,0.4);
+    padding:5px;
+}
+
 /* 左固定メニュー */
 #toc {
  position:fixed;
@@ -106,9 +115,8 @@ footer{
 <div id="discord">
 <h2>🎮 Discordスタッツ</h2>
 
-<!-- ★ここだけ画像変更した -->
-<img src="https://media1.tenor.com/m/CNBGgG2DU10AAAAC/nyan-cat-poptart.gif"
-     style="max-width:240px;">
+<img src="https://media1.tenor.com/m/CNBGgG2DU10AAAAC/nyan-cat-poptart.gif">
+
 </div>
 
 <!-- 左メニュー -->
