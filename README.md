@@ -15,10 +15,10 @@ body{
  background-size:cover;
  background-attachment:fixed;
 
- padding-top:240px;   /* スタッツ + メニュー高さ分 */
+ padding-top:240px;
 }
 
-/* Discordスタッツ（最上部） */
+/* Discordスタッツ最上部 */
 #discord {
   position:fixed;
   top:0;
@@ -28,20 +28,23 @@ body{
 
   background:rgba(0,0,0,0.55);
   padding:10px;
+
+  z-index:9999;
   backdrop-filter: blur(3px);
 }
 
-/* 上部メニュー */
+/* メニュー */
 #toc {
   position:fixed;
   top:100px;
   left:0;
   width:100%;
+  text-align:center;
 
   background:rgba(0,0,0,0.6);
   padding:10px;
-  text-align:center;
 
+  z-index:9999;
   backdrop-filter: blur(3px);
 }
 
@@ -65,17 +68,19 @@ body{
   text-decoration:underline;
 }
 
-/* セクション（余白広め + アニメーション） */
+/* セクション */
 section {
     padding:30px;
     background:rgba(0,0,0,0.55);
-
-    margin:40px;   /* ← 間を大きくした */
+    margin:40px;
 
     opacity:0;
     transform:translateX(-50px);
 
     animation:slidein 0.8s ease-out forwards;
+
+    /* メニューに隠れないようにする */
+    scroll-margin-top:170px;
 }
 
 @keyframes slidein {
@@ -89,8 +94,6 @@ section {
     }
 }
 
-h1{padding:20px;}
-
 footer{
  padding:20px;
  background:rgba(0,0,0,0.55);
@@ -102,13 +105,18 @@ footer{
 
 <h1>やもweb!</h1>
 
-<!-- Discordスタッツ -->
+<!-- ✅ Discordスタッツ -->
 <div id="discord">
 <h2>🎮 Discord スタッツ</h2>
-<img src="https://discordstatus.com/api/v1/users/1096056322346197103.png">
+
+<!-- 表示されない場合に備えて alt も付けた -->
+<img 
+    src="https://discordstatus.com/api/v1/users/1096056322346197103.png"
+    alt="Discordスタッツ"
+    style="max-width:260px;">
 </div>
 
-<!-- 目次（絵文字追加） -->
+<!-- ✅ メニュー -->
 <nav id="toc">
 <ul>
  <li><a href="#intro">👤 自己紹介</a></li>
@@ -134,13 +142,12 @@ footer{
 <h2>フォートナイト</h2>
 
 <p>
-フォートナイトは、2017年にリリースされたオンラインマルチプレイヤーゲームで、<br>
-全世界で4億人以上の登録ユーザーを誇ります。
+フォートナイトは2017年リリースのオンラインゲームです。
 </p>
 
 <p>
-最近は <strong>ブレインロット</strong> をやっていて、<br>
-総ドラゴン獲得数は<strong>10以上</strong>です🔥
+最近は <strong>ブレインロット</strong> をプレイ中🔥<br>
+総ドラゴン獲得数は<strong>10以上</strong>です！！
 </p>
 </section>
 
@@ -149,7 +156,7 @@ footer{
 <h2>マインクラフト</h2>
 
 <p>
-Minecraft（マインクラフト）は自由度の高いサンドボックスゲームです。
+Minecraftは自由度の高いサンドボックスゲームです。
 </p>
 
 <p>
@@ -165,3 +172,4 @@ Minecraft（マインクラフト）は自由度の高いサンドボックス�
 
 </body>
 </html>
+
