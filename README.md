@@ -103,7 +103,7 @@ footer{
 </head>
 <body>
 
-<h1>やもweb!</h1>
+<h1>オンライン</h1>
 
 <!-- Discordスタッツ（画像削除→やもweb表示） -->
 <div id="discord">
