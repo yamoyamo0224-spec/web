@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -16,7 +15,7 @@ body{
  background-size:cover;
  background-attachment:fixed;
 
- padding-right:220px;   /* 右の目次と重ならないように余白 */
+ padding-right:220px;   /* 右側メニューと重ならないように */
 }
 
 /* ✅ 右固定目次 */
@@ -30,7 +29,7 @@ body{
   padding:10px;
   border-radius:6px;
 
-  backdrop-filter: blur(3px); /* 少しおしゃれ効果 */
+  backdrop-filter: blur(3px);
 }
 
 #toc ul {
@@ -47,23 +46,28 @@ body{
   text-decoration:underline;
 }
 
-/* ✅ セクション（アニメーション変更） */
-section{
- padding:20px;
- background:rgba(0,0,0,0.55);
- margin:10px;
+/* ✅ セクション（アニメーション） */
+section {
+    padding:20px;
+    background:rgba(0,0,0,0.55);
+    margin:10px;
 
- opacity:0;
- transform:translateX(-40px);  /* 左から入ってくる */
- animation:slidein 0.7s forwards;
+    opacity:0;
+    transform:translateX(-50px);
+
+    animation:slidein 0.8s ease-out forwards;
 }
 
-/* 新アニメーション */
+/* 左から滑り込むアニメーション */
 @keyframes slidein {
-  to {
-    opacity:1;
-    transform:translateX(0);
-  }
+    from {
+        opacity:0;
+        transform:translateX(-50px);
+    }
+    to {
+        opacity:1;
+        transform:translateX(0);
+    }
 }
 
 h1{padding:20px;}
@@ -79,7 +83,7 @@ footer{
 
 <h1>やもweb!</h1>
 
-<!-- ✅ 右固定目次 -->
+<!-- ✅ 目次 -->
 <nav id="toc">
 <h2>📘 目次</h2>
 <ul>
