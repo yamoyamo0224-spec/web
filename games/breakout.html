@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブロック崩し - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    canvas { background: #0f172a; border-radius: 8px; display: block; margin: 0 auto; max-width: 100%; }
+    .info { text-align: center; margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center; flex-direction:column; gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>ブロック崩し</h1>
+    </div>
+  </header>
+  <main>
+    <div class="info">スコア: <span id="score">0</span>　残機: <span id="lives">3</span></div>
+    <canvas id="c" width="480" height="320"></canvas>
+    <div style="text-align:center; margin-top:1rem;">
+      <button class="btn" id="start">スタート / リスタート</button>
+      <p style="margin-top:0.6rem; color:#666; font-size:0.85rem;">マウス or タッチでバーを操作</p>
+    </div>
+  </main>
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let ball, paddle, bricks, score, lives, running, animId;
+
+    function init() {
+      cancelAnimationFrame(animId);
+      ball = {x:240, y:280, dx:3, dy:-3, r:6};
+      paddle = {x:200, w:80, h:10};
+      score = 0; lives = 3;
+      document.getElementById('score').textContent = 0;
+      document.getElementById('lives').textContent = 3;
+      bricks = [];
+      const colors = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6'];
+      for (let r=0;r<5;r++) {
+        for (let c=0;c<8;c++) {
+          bricks.push({x: c*58+16, y: r*22+30, w:52, h:16, alive:true, color:colors[r]});
+        }
+      }
+      running = true;
+      loop();
+    }
+
+    function loop() {
+      if (!running) return;
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0,0,480,320);
+
+      // bricks
+      bricks.forEach(b => {
+        if (!b.alive) return;
+        ctx.fillStyle = b.color;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        if (ball.x > b.x && ball.x < b.x+b.w && ball.y > b.y && ball.y < b.y+b.h) {
+          b.alive = false;
+          ball.dy = -ball.dy;
+          score += 10;
+          document.getElementById('score').textContent = score;
+        }
+      });
+
+      // paddle
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(paddle.x, 300, paddle.w, paddle.h);
+
+      // ball
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+      ctx.fillStyle = '#f1f5f9';
+      ctx.fill();
+
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      if (ball.x < ball.r || ball.x > 480-ball.r) ball.dx = -ball.dx;
+      if (ball.y < ball.r) ball.dy = -ball.dy;
+      if (ball.y > 300 && ball.x > paddle.x && ball.x < paddle.x+paddle.w) {
+        ball.dy = -Math.abs(ball.dy);
+      }
+      if (ball.y > 320) {
+        lives--;
+        document.getElementById('lives').textContent = lives;
+        if (lives <= 0) {
+          running = false;
+          ctx.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx.fillRect(0,0,480,320);
+          ctx.fillStyle = '#fff';
+          ctx.font = '24px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('ゲームオーバー', 240, 150);
+          return;
+        }
+        ball = {x:240, y:280, dx:3, dy:-3, r:6};
+      }
+
+      if (bricks.every(b => !b.alive)) {
+        running = false;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(0,0,480,320);
+        ctx.fillStyle = '#fff';
+        ctx.font = '24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('クリア！', 240, 150);
+        return;
+      }
+
+      animId = requestAnimationFrame(loop);
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const scale = canvas.width / rect.width;
+      paddle.x = (e.clientX - rect.left) * scale - paddle.w/2;
+      paddle.x = Math.max(0, Math.min(480-paddle.w, paddle.x));
+    });
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const scale = canvas.width / rect.width;
+      paddle.x = (e.touches[0].clientX - rect.left) * scale - paddle.w/2;
+      paddle.x = Math.max(0, Math.min(480-paddle.w, paddle.x));
+    }, {passive:false});
+
+    document.getElementById('start').onclick = init;
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>

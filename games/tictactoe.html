@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三目並べ - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    #board{display:grid;grid-template-columns:repeat(3,90px);gap:6px;justify-content:center;margin:1.5rem auto;}
+    .cell{width:90px;height:90px;background:#fff;border:2px solid #cbd5e1;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;font-size:2.5rem;cursor:pointer;font-weight:700;}
+    .cell:hover{background:#f1f5f9;}
+    .cell.x{color:#3b82f6;} .cell.o{color:#ef4444;}
+    .info{text-align:center;font-size:1.2rem;margin:0.5rem 0;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center;flex-direction:column;gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>三目並べ</h1>
+    </div>
+  </header>
+  <main>
+    <div class="info" id="status">あなたの番（○）</div>
+    <div id="board"></div>
+    <div style="text-align:center;margin-top:1rem;"><button class="btn" id="reset">リセット</button></div>
+  </main>
+  <script>
+    let board, turn, over;
+    const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+    function init(){
+      board=Array(9).fill(''); turn='O'; over=false;
+      document.getElementById('status').textContent='あなたの番（○）';
+      render();
+    }
+
+    function render(){
+      const el=document.getElementById('board'); el.innerHTML='';
+      board.forEach((v,i)=>{
+        const d=document.createElement('div');
+        d.className='cell'+(v==='X'?' x':v==='O'?' o':'');
+        d.textContent=v;
+        d.onclick=()=>play(i);
+        el.appendChild(d);
+      });
+    }
+
+    function check(){
+      for(const [a,b,c] of wins) if(board[a]&&board[a]===board[b]&&board[a]===board[c]) return board[a];
+      if(board.every(x=>x)) return 'draw';
+      return null;
+    }
+
+    function play(i){
+      if(over||board[i]||turn!=='O') return;
+      board[i]='O';
+      let r=check();
+      if(r){ end(r); return; }
+      turn='X'; document.getElementById('status').textContent='CPUの番…';
+      render();
+      setTimeout(cpuMove,400);
+    }
+
+    function cpuMove(){
+      // simple AI: win > block > center > random
+      let move=-1;
+      for(const [a,b,c] of wins){
+        const line=[board[a],board[b],board[c]];
+        if(line.filter(x=>x==='X').length===2 && line.includes('')) move=[a,b,c][line.indexOf('')];
+      }
+      if(move<0) for(const [a,b,c] of wins){
+        const line=[board[a],board[b],board[c]];
+        if(line.filter(x=>x==='O').length===2 && line.includes('')) move=[a,b,c][line.indexOf('')];
+      }
+      if(move<0 && !board[4]) move=4;
+      if(move<0){ const empty=board.map((v,i)=>v===''?i:-1).filter(x=>x>=0); move=empty[Math.floor(Math.random()*empty.length)]; }
+      board[move]='X';
+      let r=check();
+      if(r){ end(r); return; }
+      turn='O'; document.getElementById('status').textContent='あなたの番（○）';
+      render();
+    }
+
+    function end(r){
+      over=true; render();
+      document.getElementById('status').textContent = r==='draw'?'引き分け':r==='O'?'あなたの勝ち！':'CPUの勝ち';
+    }
+
+    document.getElementById('reset').onclick=init;
+    init();
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>

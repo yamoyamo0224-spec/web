@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ポン - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    canvas { background:#0f172a; border-radius:8px; display:block; margin:0 auto; max-width:100%; }
+    .info { text-align:center; margin:0.5rem 0; font-size:1.2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center;flex-direction:column;gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>ポン</h1>
+    </div>
+  </header>
+  <main>
+    <div class="info"><span id="p1">0</span> - <span id="p2">0</span></div>
+    <canvas id="c" width="480" height="320"></canvas>
+    <div style="text-align:center;margin-top:1rem;">
+      <button class="btn" id="start">スタート</button>
+      <p style="color:#666;font-size:0.85rem;margin-top:0.6rem;">W/S または マウスで左側のバーを操作　先に7点</p>
+    </div>
+  </main>
+  <script>
+    const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+    let ball, p1, p2, score1, score2, running, keys={};
+
+    function init(){
+      ball={x:240,y:160,dx:4,dy:3,r:6};
+      p1={y:130,h:60}; p2={y:130,h:60};
+      score1=0; score2=0;
+      document.getElementById('p1').textContent=0;
+      document.getElementById('p2').textContent=0;
+      running=true; loop();
+    }
+
+    function loop(){
+      if(!running) return;
+      ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,480,320);
+      // paddles
+      ctx.fillStyle='#94a3b8';
+      ctx.fillRect(10,p1.y,8,p1.h);
+      ctx.fillRect(462,p2.y,8,p2.h);
+      // ball
+      ctx.beginPath(); ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2); ctx.fillStyle='#f1f5f9'; ctx.fill();
+      // move
+      if(keys['w']||keys['W']) p1.y=Math.max(0,p1.y-5);
+      if(keys['s']||keys['S']) p1.y=Math.min(260,p1.y+5);
+      // AI
+      if(p2.y+30 < ball.y) p2.y=Math.min(260,p2.y+3.5);
+      else p2.y=Math.max(0,p2.y-3.5);
+
+      ball.x+=ball.dx; ball.y+=ball.dy;
+      if(ball.y<ball.r||ball.y>320-ball.r) ball.dy=-ball.dy;
+      // paddle collision
+      if(ball.x-ball.r<18 && ball.y>p1.y && ball.y<p1.y+p1.h){ ball.dx=Math.abs(ball.dx); ball.dy+=(ball.y-(p1.y+30))/15; }
+      if(ball.x+ball.r>462 && ball.y>p2.y && ball.y<p2.y+p2.h){ ball.dx=-Math.abs(ball.dx); ball.dy+=(ball.y-(p2.y+30))/15; }
+      if(ball.x<0){ score2++; document.getElementById('p2').textContent=score2; resetBall(); }
+      if(ball.x>480){ score1++; document.getElementById('p1').textContent=score1; resetBall(); }
+      if(score1>=7||score2>=7){ running=false; ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,480,320);
+        ctx.fillStyle='#fff'; ctx.font='24px sans-serif'; ctx.textAlign='center';
+        ctx.fillText(score1>=7?'あなたの勝ち！':'CPUの勝ち',240,160); return; }
+      requestAnimationFrame(loop);
+    }
+    function resetBall(){ ball={x:240,y:160,dx:(Math.random()>0.5?4:-4),dy:(Math.random()*4-2),r:6}; }
+
+    document.addEventListener('keydown',e=>keys[e.key]=true);
+    document.addEventListener('keyup',e=>keys[e.key]=false);
+    canvas.addEventListener('mousemove',e=>{
+      const rect=canvas.getBoundingClientRect();
+      p1.y = (e.clientY-rect.top)*(320/rect.height)-30;
+      p1.y=Math.max(0,Math.min(260,p1.y));
+    });
+    document.getElementById('start').onclick=init;
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>

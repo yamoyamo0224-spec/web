@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マインスイーパー - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    #grid { display: inline-grid; gap: 2px; background: #64748b; padding: 4px; border-radius: 6px; }
+    .cell { width: 32px; height: 32px; background: #94a3b8; display: flex; align-items: center; justify-content: center;
+      font-size: 0.9rem; font-weight: 700; cursor: pointer; user-select: none; border-radius: 3px; }
+    .cell.revealed { background: #e2e8f0; cursor: default; }
+    .cell.flag { background: #fbbf24; }
+    .cell.mine { background: #ef4444; color: #fff; }
+    .n1 { color: #3b82f6; } .n2 { color: #16a34a; } .n3 { color: #dc2626; }
+    .n4 { color: #7c3aed; } .n5 { color: #b45309; } .n6 { color: #0d9488; }
+    .info { text-align: center; margin: 0.8rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center;flex-direction:column;gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>マインスイーパー</h1>
+    </div>
+  </header>
+  <main style="text-align:center;">
+    <div class="info">残り旗: <span id="flags">10</span>　<button class="btn" id="reset" style="margin-left:1rem;">リセット</button></div>
+    <div id="grid"></div>
+    <p style="color:#666;font-size:0.85rem;margin-top:1rem;">左クリック:開く　右クリック:旗</p>
+  </main>
+  <script>
+    const ROWS=9, COLS=9, MINES=10;
+    let board, revealed, flagged, gameOver, flagsLeft;
+    const gridEl = document.getElementById('grid');
+    gridEl.style.gridTemplateColumns = `repeat(${COLS},32px)`;
+
+    function init() {
+      board = Array(ROWS).fill().map(()=>Array(COLS).fill(0));
+      revealed = Array(ROWS).fill().map(()=>Array(COLS).fill(false));
+      flagged = Array(ROWS).fill().map(()=>Array(COLS).fill(false));
+      gameOver = false; flagsLeft = MINES;
+      document.getElementById('flags').textContent = flagsLeft;
+      // place mines
+      let placed=0;
+      while(placed<MINES){
+        const r=Math.floor(Math.random()*ROWS), c=Math.floor(Math.random()*COLS);
+        if(board[r][c]!==-1){ board[r][c]=-1; placed++; }
+      }
+      // numbers
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        if(board[r][c]===-1) continue;
+        let n=0;
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=r+dr, nc=c+dc;
+          if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&board[nr][nc]===-1) n++;
+        }
+        board[r][c]=n;
+      }
+      render();
+    }
+
+    function render() {
+      gridEl.innerHTML='';
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        const d=document.createElement('div');
+        d.className='cell';
+        if(flagged[r][c]) { d.classList.add('flag'); d.textContent='🚩'; }
+        else if(revealed[r][c]) {
+          d.classList.add('revealed');
+          if(board[r][c]===-1){ d.classList.add('mine'); d.textContent='💣'; }
+          else if(board[r][c]>0){ d.textContent=board[r][c]; d.classList.add('n'+board[r][c]); }
+        }
+        d.oncontextmenu = e => { e.preventDefault(); toggleFlag(r,c); };
+        d.onclick = () => open(r,c);
+        gridEl.appendChild(d);
+      }
+    }
+
+    function open(r,c) {
+      if(gameOver||flagged[r][c]||revealed[r][c]) return;
+      revealed[r][c]=true;
+      if(board[r][c]===-1){
+        gameOver=true;
+        // reveal all mines
+        for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(board[i][j]===-1) revealed[i][j]=true;
+        render(); alert('爆発…'); return;
+      }
+      if(board[r][c]===0){
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=r+dr, nc=c+dc;
+          if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS) open(nr,nc);
+        }
+      }
+      render();
+      // win check
+      let left=0;
+      for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(!revealed[i][j]&&board[i][j]!==-1) left++;
+      if(left===0){ gameOver=true; alert('クリア！'); }
+    }
+
+    function toggleFlag(r,c) {
+      if(gameOver||revealed[r][c]) return;
+      if(flagged[r][c]){ flagged[r][c]=false; flagsLeft++; }
+      else if(flagsLeft>0){ flagged[r][c]=true; flagsLeft--; }
+      document.getElementById('flags').textContent = flagsLeft;
+      render();
+    }
+
+    document.getElementById('reset').onclick = init;
+    init();
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>

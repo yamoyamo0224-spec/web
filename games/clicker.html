@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クリッカー - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .big-btn{width:160px;height:160px;border-radius:50%;background:linear-gradient(145deg,#3b82f6,#2563eb);color:#fff;
+      font-size:1.4rem;font-weight:700;border:none;cursor:pointer;box-shadow:0 8px 20px rgba(59,130,246,0.4);
+      transition:transform 0.1s;display:block;margin:1.5rem auto;}
+    .big-btn:active{transform:scale(0.95);}
+    .stats{text-align:center;font-size:1.1rem;margin:0.5rem 0;}
+    .upgrades{max-width:320px;margin:1.5rem auto;display:flex;flex-direction:column;gap:0.6rem;}
+    .upg{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid #e2e8f0;
+      border-radius:8px;padding:0.7rem 1rem;cursor:pointer;}
+    .upg:hover{background:#f8fafc;}
+    .upg.disabled{opacity:0.5;cursor:not-allowed;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center;flex-direction:column;gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>クリッカー</h1>
+    </div>
+  </header>
+  <main>
+    <div class="stats">ポイント: <strong id="pts">0</strong></div>
+    <div class="stats" style="font-size:0.9rem;color:#666;">秒間: <span id="pps">0</span></div>
+    <button class="big-btn" id="click">クリック！</button>
+    <div class="upgrades" id="upgs"></div>
+  </main>
+  <script>
+    let pts=0, clickPow=1, auto=0;
+    const upgrades=[
+      {name:'クリック強化', cost:20, effect:()=>{clickPow+=1;}, level:0},
+      {name:'自動クリック', cost:50, effect:()=>{auto+=0.5;}, level:0},
+      {name:'大強化', cost:200, effect:()=>{clickPow+=5;}, level:0},
+      {name:'高速自動', cost:500, effect:()=>{auto+=3;}, level:0},
+    ];
+
+    function render(){
+      document.getElementById('pts').textContent=Math.floor(pts);
+      document.getElementById('pps').textContent=auto.toFixed(1);
+      const el=document.getElementById('upgs'); el.innerHTML='';
+      upgrades.forEach((u,i)=>{
+        const cost=Math.floor(u.cost*Math.pow(1.5,u.level));
+        const d=document.createElement('div');
+        d.className='upg'+(pts<cost?' disabled':'');
+        d.innerHTML=`<span>${u.name} (Lv${u.level})</span><span>${cost}pt</span>`;
+        d.onclick=()=>{
+          if(pts<cost) return;
+          pts-=cost; u.level++; u.effect(); render();
+        };
+        el.appendChild(d);
+      });
+    }
+
+    document.getElementById('click').onclick=()=>{ pts+=clickPow; render(); };
+    setInterval(()=>{ pts+=auto/10; render(); },100);
+    render();
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>

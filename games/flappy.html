@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>フラッピー - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    canvas{background:linear-gradient(#87ceeb,#e0f2fe);border-radius:8px;display:block;margin:0 auto;max-width:100%;}
+    .info{text-align:center;margin:0.5rem 0;font-size:1.2rem;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center;flex-direction:column;gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>フラッピーバード風</h1>
+    </div>
+  </header>
+  <main>
+    <div class="info">スコア: <span id="score">0</span></div>
+    <canvas id="c" width="320" height="480"></canvas>
+    <div style="text-align:center;margin-top:1rem;">
+      <button class="btn" id="start">スタート</button>
+      <p style="color:#666;font-size:0.85rem;margin-top:0.6rem;">クリック / スペース / タップでジャンプ</p>
+    </div>
+  </main>
+  <script>
+    const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+    let bird,pipes,score,running,frame;
+
+    function init(){
+      bird={x:60,y:200,vy:0,r:12};
+      pipes=[]; score=0; frame=0; running=true;
+      document.getElementById('score').textContent=0;
+      loop();
+    }
+
+    function loop(){
+      if(!running) return;
+      frame++;
+      ctx.clearRect(0,0,320,480);
+      // sky already bg
+      // bird
+      bird.vy+=0.4; bird.y+=bird.vy;
+      ctx.beginPath(); ctx.arc(bird.x,bird.y,bird.r,0,Math.PI*2);
+      ctx.fillStyle='#eab308'; ctx.fill();
+      ctx.beginPath(); ctx.arc(bird.x+4,bird.y-3,3,0,Math.PI*2); ctx.fillStyle='#000'; ctx.fill();
+
+      // pipes
+      if(frame%90===0){
+        const gap=120, top=50+Math.random()*200;
+        pipes.push({x:320,top,gap,passed:false});
+      }
+      pipes.forEach(p=>{
+        p.x-=2.5;
+        ctx.fillStyle='#22c55e';
+        ctx.fillRect(p.x,0,40,p.top);
+        ctx.fillRect(p.x,p.top+p.gap,40,480-(p.top+p.gap));
+        // collision
+        if(bird.x+bird.r>p.x && bird.x-bird.r<p.x+40){
+          if(bird.y-bird.r<p.top || bird.y+bird.r>p.top+p.gap){ gameOver(); }
+        }
+        if(!p.passed && p.x+40<bird.x){ p.passed=true; score++; document.getElementById('score').textContent=score; }
+      });
+      pipes=pipes.filter(p=>p.x>-40);
+
+      if(bird.y+bird.r>480||bird.y-bird.r<0) gameOver();
+      requestAnimationFrame(loop);
+    }
+
+    function gameOver(){
+      running=false;
+      ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,320,480);
+      ctx.fillStyle='#fff'; ctx.font='24px sans-serif'; ctx.textAlign='center';
+      ctx.fillText('ゲームオーバー',160,220);
+      ctx.font='18px sans-serif'; ctx.fillText('スコア: '+score,160,250);
+    }
+
+    function jump(){ if(running) bird.vy=-7; else init(); }
+    document.addEventListener('keydown',e=>{ if(e.code==='Space'){ e.preventDefault(); jump(); }});
+    canvas.onclick=jump;
+    canvas.ontouchstart=e=>{ e.preventDefault(); jump(); };
+    document.getElementById('start').onclick=init;
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>

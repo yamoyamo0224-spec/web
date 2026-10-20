@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - フリーツール集</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-box, .panel { max-width: 520px; margin: 1.5rem auto; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow); }
+    .login-box h2, .panel h2 { margin-bottom: 1rem; font-size: 1.25rem; }
+    .form-row { margin-bottom: 0.9rem; }
+    .form-row label { display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.25rem; }
+    .form-row input { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 0.55rem 0.75rem; font-size: 0.95rem; }
+    .err { color: #dc2626; font-size: 0.85rem; margin-top: 0.5rem; min-height: 1.2rem; }
+    .section { margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
+    .section h3 { font-size: 1rem; margin-bottom: 0.6rem; }
+    .word-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+    .word-tag { background: #fee2e2; color: #991b1b; padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.35rem; }
+    .word-tag button { background: none; border: none; color: #991b1b; cursor: pointer; font-size: 0.9rem; padding: 0; line-height: 1; }
+    .add-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .add-row input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.65rem; }
+    .timeout-list { font-size: 0.9rem; }
+    .timeout-list div { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { opacity: 0.9; }
+    .hidden { display: none !important; }
+    .status-ok { color: #16a34a; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center; flex-direction:column; gap:0.3rem;">
+      <a href="index.html" class="back-link">← トップ</a>
+      <h1>Admin Panel</h1>
+    </div>
+  </header>
+
+  <main>
+    <!-- Login -->
+    <div class="login-box" id="loginBox">
+      <h2>管理者ログイン</h2>
+      <div class="form-row">
+        <label>ID</label>
+        <input type="text" id="loginId" autocomplete="username">
+      </div>
+      <div class="form-row">
+        <label>パスワード</label>
+        <input type="password" id="loginPass" autocomplete="current-password">
+      </div>
+      <button class="btn" id="loginBtn">ログイン</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+
+    <!-- Panel -->
+    <div class="panel hidden" id="panel">
+      <h2>管理パネル <span class="status-ok" id="adminStatus">ログイン中</span></h2>
+      <p style="font-size:0.85rem;color:#64748b;">チャットではニックネームが「[製作者]」になります。</p>
+      <div class="actions">
+        <a href="chat.html" class="btn">チャットへ</a>
+        <button class="btn btn-secondary" id="logoutBtn">ログアウト</button>
+      </div>
+
+      <div class="section">
+        <h3>禁止ワード</h3>
+        <p style="font-size:0.8rem;color:#666;">ニックネーム・メッセージに含まれるとブロック。メッセージの場合は削除＋10分タイムアウト。</p>
+        <div class="word-list" id="wordList"></div>
+        <div class="add-row">
+          <input type="text" id="newWord" placeholder="追加する単語" maxlength="30">
+          <button class="btn" id="addWordBtn">追加</button>
+        </div>
+        <div class="actions">
+          <button class="btn btn-secondary" id="resetWordsBtn">デフォルトに戻す</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>タイムアウト中のユーザー</h3>
+        <div class="timeout-list" id="timeoutList">なし</div>
+        <div class="add-row" style="margin-top:0.8rem;">
+          <input type="text" id="timeoutUid" placeholder="ユーザーID（チャットの内部ID）" style="flex:1.2;">
+          <input type="number" id="timeoutMin" value="10" min="1" max="1440" style="width:70px;" title="分">
+          <button class="btn" id="timeoutBtn">タイムアウト</button>
+        </div>
+        <p style="font-size:0.75rem;color:#94a3b8;margin-top:0.3rem;">※ 同じブラウザのタブ間で共有。ユーザーIDは開発者ツール等で確認するか、荒らし検知時に使用。</p>
+      </div>
+
+      <div class="section">
+        <h3>チャット操作</h3>
+        <div class="actions">
+          <button class="btn btn-danger" id="clearChatBtn">チャット履歴を全削除</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>その他</h3>
+        <div class="actions">
+          <button class="btn btn-secondary" id="exportBtn">設定をエクスポート</button>
+          <button class="btn btn-secondary" id="importBtn">設定をインポート</button>
+        </div>
+        <textarea id="importArea" placeholder="エクスポートしたJSONを貼り付け" style="width:100%;height:80px;margin-top:0.5rem;border:1px solid var(--border);border-radius:8px;padding:0.5rem;font-size:0.85rem;display:none;"></textarea>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const ADMIN_ID = 'kd';
+    const ADMIN_PASS = 'yamoyamo0224';
+    const ADMIN_KEY = 'freetools_admin_session';
+    const BLOCK_KEY = 'freetools_blocked_words';
+    const TIMEOUT_KEY = 'freetools_timeouts';
+    const CHANNEL = 'freetools_chat_v2';
+    const DEFAULT_BLOCKED = ['死ね','しね','sine','kill yourself','kys','バカ','馬鹿','アホ','あほ','クソ','くそ','カス','かす','消えろ','くたばれ','殺す','ころす'];
+
+    const bc = ('BroadcastChannel' in window) ? new BroadcastChannel(CHANNEL) : null;
+
+    function getMyUid() {
+      return sessionStorage.getItem('chat_uid') || (Date.now().toString(36) + Math.random().toString(36).slice(2, 6));
+    }
+
+    function isLoggedIn() {
+      try {
+        const s = JSON.parse(sessionStorage.getItem(ADMIN_KEY) || 'null');
+        return s && s.ok === true;
+      } catch { return false; }
+    }
+
+    function showPanel() {
+      document.getElementById('loginBox').classList.add('hidden');
+      document.getElementById('panel').classList.remove('hidden');
+      renderWords();
+      renderTimeouts();
+    }
+
+    function showLogin() {
+      document.getElementById('loginBox').classList.remove('hidden');
+      document.getElementById('panel').classList.add('hidden');
+    }
+
+    if (isLoggedIn()) showPanel();
+    else showLogin();
+
+    document.getElementById('loginBtn').onclick = () => {
+      const id = document.getElementById('loginId').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      const err = document.getElementById('loginErr');
+      if (id === ADMIN_ID && pass === ADMIN_PASS) {
+        const uid = getMyUid();
+        sessionStorage.setItem('chat_uid', uid);
+        sessionStorage.setItem(ADMIN_KEY, JSON.stringify({ ok: true, uid: uid, at: Date.now() }));
+        err.textContent = '';
+        showPanel();
+      } else {
+        err.textContent = 'IDまたはパスワードが違います';
+      }
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+      sessionStorage.removeItem(ADMIN_KEY);
+      showLogin();
+    };
+
+    // --- Words ---
+    function getWords() {
+      try {
+        const w = JSON.parse(localStorage.getItem(BLOCK_KEY));
+        if (Array.isArray(w)) return w;
+      } catch {}
+      return [...DEFAULT_BLOCKED];
+    }
+    function setWords(arr) {
+      localStorage.setItem(BLOCK_KEY, JSON.stringify(arr));
+      if (bc) bc.postMessage({ type: 'mod_blockwords', words: arr });
+      renderWords();
+    }
+    function renderWords() {
+      const list = document.getElementById('wordList');
+      list.innerHTML = '';
+      getWords().forEach((w, i) => {
+        const tag = document.createElement('span');
+        tag.className = 'word-tag';
+        tag.innerHTML = esc(w) + ' <button data-i="' + i + '" title="削除">×</button>';
+        tag.querySelector('button').onclick = () => {
+          const arr = getWords();
+          arr.splice(i, 1);
+          setWords(arr);
+        };
+        list.appendChild(tag);
+      });
+    }
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    document.getElementById('addWordBtn').onclick = () => {
+      const v = document.getElementById('newWord').value.trim();
+      if (!v) return;
+      const arr = getWords();
+      if (arr.includes(v)) { alert('すでに登録されています'); return; }
+      arr.push(v);
+      setWords(arr);
+      document.getElementById('newWord').value = '';
+    };
+    document.getElementById('resetWordsBtn').onclick = () => {
+      if (confirm('禁止ワードをデフォルトに戻しますか？')) setWords([...DEFAULT_BLOCKED]);
+    };
+
+    // --- Timeouts ---
+    function getTimeouts() {
+      try { return JSON.parse(localStorage.getItem(TIMEOUT_KEY) || '{}'); } catch { return {}; }
+    }
+    function renderTimeouts() {
+      const t = getTimeouts();
+      const el = document.getElementById('timeoutList');
+      const now = Date.now();
+      const active = Object.entries(t).filter(([, until]) => until > now);
+      if (!active.length) { el.textContent = 'なし'; return; }
+      el.innerHTML = '';
+      active.forEach(([uid, until]) => {
+        const left = Math.ceil((until - now) / 60000);
+        const row = document.createElement('div');
+        row.innerHTML = '<span>' + esc(uid) + ' （残り約' + left + '分）</span>';
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.style.padding = '0.25rem 0.5rem';
+        btn.style.fontSize = '0.8rem';
+        btn.textContent = '解除';
+        btn.onclick = () => {
+          const obj = getTimeouts();
+          delete obj[uid];
+          localStorage.setItem(TIMEOUT_KEY, JSON.stringify(obj));
+          if (bc) bc.postMessage({ type: 'timeout', id: uid, minutes: 0, until: 0 });
+          renderTimeouts();
+        };
+        row.appendChild(btn);
+        el.appendChild(row);
+      });
+    }
+
+    document.getElementById('timeoutBtn').onclick = () => {
+      const uid = document.getElementById('timeoutUid').value.trim();
+      const min = parseInt(document.getElementById('timeoutMin').value, 10) || 10;
+      if (!uid) { alert('ユーザーIDを入力してください'); return; }
+      const obj = getTimeouts();
+      obj[uid] = Date.now() + min * 60 * 1000;
+      localStorage.setItem(TIMEOUT_KEY, JSON.stringify(obj));
+      if (bc) bc.postMessage({ type: 'timeout', id: uid, minutes: min, until: obj[uid] });
+      renderTimeouts();
+      alert(uid + ' を ' + min + ' 分タイムアウトしました');
+    };
+
+    setInterval(renderTimeouts, 15000);
+
+    // --- Clear chat ---
+    document.getElementById('clearChatBtn').onclick = () => {
+      if (!confirm('このブラウザ内のチャット履歴を全削除しますか？')) return;
+      sessionStorage.removeItem('chat_history_v2');
+      if (bc) bc.postMessage({ type: 'mod_clear' });
+      alert('クリアしました。チャットページを開いているタブにも反映されます。');
+    };
+
+    // --- Export / Import ---
+    document.getElementById('exportBtn').onclick = () => {
+      const data = {
+        blockedWords: getWords(),
+        timeouts: getTimeouts()
+      };
+      const ta = document.getElementById('importArea');
+      ta.style.display = 'block';
+      ta.value = JSON.stringify(data, null, 2);
+      ta.select();
+    };
+    document.getElementById('importBtn').onclick = () => {
+      const ta = document.getElementById('importArea');
+      ta.style.display = 'block';
+      if (!ta.value.trim()) { alert('JSONを貼り付けてから再度押してください'); return; }
+      try {
+        const data = JSON.parse(ta.value);
+        if (Array.isArray(data.blockedWords)) setWords(data.blockedWords);
+        if (data.timeouts && typeof data.timeouts === 'object') {
+          localStorage.setItem(TIMEOUT_KEY, JSON.stringify(data.timeouts));
+          renderTimeouts();
+        }
+        alert('インポートしました');
+      } catch {
+        alert('JSONの形式が正しくありません');
+      }
+    };
+  </script>
+</body>
+</html>

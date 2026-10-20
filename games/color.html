@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>色合わせ - フリーツール集</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    #target{width:120px;height:120px;border-radius:16px;margin:1rem auto;border:4px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+    .sliders{max-width:300px;margin:0 auto;}
+    .sliders label{display:flex;align-items:center;gap:0.5rem;margin:0.6rem 0;font-size:0.95rem;}
+    .sliders input[type=range]{flex:1;}
+    #preview{width:80px;height:80px;border-radius:12px;margin:1rem auto;border:3px solid #e2e8f0;}
+    .info{text-align:center;margin:0.5rem 0;}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center;flex-direction:column;gap:0.3rem;">
+      <a href="../games.html" class="back-link">← ゲーム一覧</a>
+      <h1>色合わせ</h1>
+    </div>
+  </header>
+  <main>
+    <div class="info">目標の色に合わせてください</div>
+    <div id="target"></div>
+    <div class="info">あなたの色</div>
+    <div id="preview"></div>
+    <div class="sliders">
+      <label>R <input type="range" id="r" min="0" max="255" value="128"> <span id="rv">128</span></label>
+      <label>G <input type="range" id="g" min="0" max="255" value="128"> <span id="gv">128</span></label>
+      <label>B <input type="range" id="b" min="0" max="255" value="128"> <span id="bv">128</span></label>
+    </div>
+    <div style="text-align:center;margin-top:1.2rem;">
+      <button class="btn" id="check">判定</button>
+      <button class="btn btn-secondary" id="next">次の色</button>
+    </div>
+    <div class="info" id="result" style="min-height:1.5rem;"></div>
+  </main>
+  <script>
+    let tr,tg,tb;
+    function newColor(){
+      tr=Math.floor(Math.random()*256); tg=Math.floor(Math.random()*256); tb=Math.floor(Math.random()*256);
+      document.getElementById('target').style.background=`rgb(${tr},${tg},${tb})`;
+      document.getElementById('result').textContent='';
+    }
+    function update(){
+      const r=+document.getElementById('r').value, g=+document.getElementById('g').value, b=+document.getElementById('b').value;
+      document.getElementById('rv').textContent=r; document.getElementById('gv').textContent=g; document.getElementById('bv').textContent=b;
+      document.getElementById('preview').style.background=`rgb(${r},${g},${b})`;
+    }
+    document.getElementById('r').oninput=update;
+    document.getElementById('g').oninput=update;
+    document.getElementById('b').oninput=update;
+    document.getElementById('check').onclick=()=>{
+      const r=+document.getElementById('r').value, g=+document.getElementById('g').value, b=+document.getElementById('b').value;
+      const dist=Math.sqrt((r-tr)**2+(g-tg)**2+(b-tb)**2);
+      let msg;
+      if(dist<15) msg='完璧！';
+      else if(dist<40) msg='かなり近い！';
+      else if(dist<80) msg='もう少し';
+      else msg='まだ遠い…';
+      document.getElementById('result').textContent=`差: ${Math.round(dist)}　${msg}`;
+    };
+    document.getElementById('next').onclick=newColor;
+    update(); newColor();
+  </script>
+<script src="../js/game-common.js"></script>
+</body>
+</html>
