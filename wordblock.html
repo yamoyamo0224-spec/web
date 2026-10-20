@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>単語ブロック - フリーツール集</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="page-header" style="justify-content:center; flex-direction:column; gap:0.3rem;">
+      <a href="index.html" class="back-link">← トップに戻る</a>
+      <h1>単語ブロック</h1>
+      <p class="subtitle">隣接する文字をつなげて単語を作ろう</p>
+    </div>
+  </header>
+
+  <main>
+    <div class="word-info">
+      <div class="current-word" id="current">　</div>
+      <div class="score">スコア: <span id="score">0</span>　見つかった単語: <span id="count">0</span></div>
+    </div>
+
+    <div id="board"></div>
+
+    <div style="text-align:center; margin-top:1rem;">
+      <button class="btn" id="submit">決定</button>
+      <button class="btn btn-secondary" id="clearSel">選択クリア</button>
+      <button class="btn btn-secondary" id="newBoard">新しい盤面</button>
+    </div>
+
+    <div class="found-words" id="found"></div>
+
+    <p style="text-align:center; color:#666; font-size:0.85rem; margin-top:1.5rem;">
+      隣接（上下左右・斜め）の文字を順番にクリックして単語を作り、「決定」を押してください。<br>
+      3文字以上の英単語が対象です（簡易辞書内蔵）。
+    </p>
+  </main>
+
+  <script>
+    // 簡易英単語辞書（よくある短い単語）
+    const DICT = new Set([
+      "the","and","for","are","but","not","you","all","can","had","her","was","one","our","out","day","get","has","him","his","how","man","new","now","old","see","two","way","who","boy","did","its","let","put","say","she","too","use",
+      "cat","dog","run","big","red","blue","green","yes","no","hot","cold","sun","moon","star","sky","sea","tree","bird","fish","book","pen","car","bus","train","home","school","play","game","time","year","week","month",
+      "apple","water","house","mouse","light","night","right","left","high","long","short","small","large","happy","smile","laugh","think","know","make","take","come","go","look","find","give","tell","work","call","try","ask",
+      "good","best","better","first","last","next","same","other","only","also","just","more","most","many","much","some","any","every","each","both","few","own","same","such","than","then","them","these","those","what","when","where","which","while","with","would","could","should","about","after","again","before","being","between","during","under","over","into","from","that","this","they","have","been","were","said","will","each","which","their","said","if","up","out","many","then","them","these","so","some","her","would","make","like","him","into","time","has","look","two","more","write","go","see","number","no","way","could","people","my","than","first","water","been","call","who","oil","sit","now","find","long","down","day","did","get","come","made","may","part",
+      "love","hate","friend","family","food","drink","sleep","dream","music","dance","sing","read","write","draw","paint","color","black","white","yellow","orange","purple","brown","pink","gray","grey",
+      "hello","world","code","html","css","javascript","computer","phone","tablet","screen","keyboard","mouse","click","type","save","open","close","start","stop","play","pause","next","back","home","page","site","link","image","video","audio","file","folder","data","info","user","pass","word","name","email","mail","send","receive","message","chat","talk","speak","listen","hear","see","watch","look","view","show","hide","appear","disappear"
+    ]);
+
+    const SIZE = 5;
+    const LETTERS = "AAAAAAAAABBCCDDDDEEEEEEEFFGGGHHIIIIIIJKLLLLMMNNNNNOOOOOOPPQRRRRSSSSTTTTTTUUUVVWWXYYZ";
+    let board = [];
+    let selected = [];
+    let score = 0;
+    let found = new Set();
+
+    function newBoard() {
+      board = [];
+      for (let i=0; i<SIZE*SIZE; i++) {
+        board.push(LETTERS[Math.floor(Math.random()*LETTERS.length)]);
+      }
+      selected = [];
+      render();
+      document.getElementById('current').textContent = '　';
+    }
+
+    function render() {
+      const el = document.getElementById('board');
+      el.style.gridTemplateColumns = `repeat(${SIZE}, 52px)`;
+      el.innerHTML = '';
+      board.forEach((letter, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = letter;
+        cell.dataset.index = i;
+        if (selected.includes(i)) cell.classList.add('selected');
+        cell.onclick = () => toggle(i);
+        el.appendChild(cell);
+      });
+    }
+
+    function isAdjacent(a, b) {
+      const ar = Math.floor(a/SIZE), ac = a%SIZE;
+      const br = Math.floor(b/SIZE), bc = b%SIZE;
+      return Math.abs(ar-br) <= 1 && Math.abs(ac-bc) <= 1 && a !== b;
+    }
+
+    function toggle(i) {
+      const idx = selected.indexOf(i);
+      if (idx !== -1) {
+        // 最後に選んだものだけ解除可能
+        if (idx === selected.length-1) {
+          selected.pop();
+        }
+      } else {
+        if (selected.length === 0 || isAdjacent(selected[selected.length-1], i)) {
+          selected.push(i);
+        }
+      }
+      updateCurrent();
+      render();
+    }
+
+    function updateCurrent() {
+      const word = selected.map(i => board[i]).join('');
+      document.getElementById('current').textContent = word || '　';
+    }
+
+    document.getElementById('submit').onclick = () => {
+      const word = selected.map(i => board[i]).join('').toLowerCase();
+      if (word.length < 3) {
+        alert('3文字以上の単語を選んでください');
+        return;
+      }
+      if (found.has(word)) {
+        alert('すでに見つけた単語です');
+        return;
+      }
+      if (DICT.has(word)) {
+        found.add(word);
+        score += word.length * 10;
+        document.getElementById('score').textContent = score;
+        document.getElementById('count').textContent = found.size;
+        const span = document.createElement('span');
+        span.textContent = word;
+        document.getElementById('found').appendChild(span);
+        selected = [];
+        updateCurrent();
+        render();
+      } else {
+        alert('辞書にない単語です（簡易辞書のため認識できない場合があります）');
+      }
+    };
+
+    document.getElementById('clearSel').onclick = () => {
+      selected = [];
+      updateCurrent();
+      render();
+    };
+
+    document.getElementById('newBoard').onclick = () => {
+      if (found.size > 0 && !confirm('新しい盤面にしますか？（スコアはリセットされます）')) return;
+      score = 0;
+      found.clear();
+      document.getElementById('score').textContent = 0;
+      document.getElementById('count').textContent = 0;
+      document.getElementById('found').innerHTML = '';
+      newBoard();
+    };
+
+    newBoard();
+  </script>
+<script src="js/game-common.js"></script>
+</body>
+</html>
